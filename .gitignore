@@ -1,0 +1,27 @@
+# Environment / secrets
+backend/.env
+backend/.venv/
+backend/venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Frontend dependencies
+backend/frontend/node_modules/
+backend/frontend/dist/
+
+# Local uploaded files
+backend/storage_vaults/*
+!backend/storage_vaults/.gitkeep
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
