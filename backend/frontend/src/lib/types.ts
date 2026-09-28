@@ -88,6 +88,7 @@ export interface JobDescriptionUpdate {
   required_skills?: string[];
 }
 
+
 export interface MatchResult {
   id: string;
   candidate_name: string;
@@ -95,8 +96,25 @@ export interface MatchResult {
   phone: string | null;
   file_path: string;
   parsed_json: ParsedResumeData;
+
+  // Final combined match score
   score: number;
+
+  // Score breakdown
+  semantic_score: number;
+  skill_match_score: number;
+
+  // Skill gap analysis
+  matched_skills: string[];
+  missing_skills: string[];
+
+  // Candidate ranking and recommendation
+  rank: number;
+  match_quality: string;
+  recommended_action: string;
 }
+
+
 
 export interface SearchResponse {
   total_matches: number;
