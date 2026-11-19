@@ -65,7 +65,10 @@ async def upload_resume(
 
     # --- 2. Extract raw text ---------------------------------------------------
     try:
-        raw_text = extract_text_from_pdf_bytes(pdf_bytes)
+       raw_text = extract_text_from_pdf_bytes(
+               pdf_bytes,
+               ocr_callback=parser.extract_text_from_image,
+        )
     except PDFExtractionError as exc:
         storage.delete(file_path)
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc

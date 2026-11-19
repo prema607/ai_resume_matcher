@@ -1,17 +1,15 @@
 
 """
-Converts raw unstructured resume text into a validated ParsedResumeData
-object using Google Gemini.
-
-Uses the modern Google GenAI SDK.
+Converts resume text into ParsedResumeData using Google Gemini.
+Also provides Gemini Vision OCR for scanned PDF pages.
 """
-
 from __future__ import annotations
 
 import json
 import logging
 
 from google import genai
+from google.genai import types
 from pydantic import ValidationError
 from tenacity import (
     retry,
@@ -22,7 +20,6 @@ from tenacity import (
 
 from app.core.config import get_settings
 from app.schemas.parsed_data import ParsedResumeData
-
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +39,24 @@ Rules:
 """
 
 
+_OCR_PROMPT = """
+You are an accurate OCR engine for resume documents.
+
+Extract ALL readable text from this resume page.
+Preserve names, email addresses, phone numbers, dates, skills,
+education, work experience, headings, and project details.
+
+Rules:
+1. Do not summarize or interpret the resume.
+2. Do not invent missing or unclear words.
+3. Preserve the original wording as closely as possible.
+4. Return only the extracted text.
+5. If a word is unreadable, mark it as [unreadable].
+"""
+
+
 class ResumeParsingError(Exception):
-    """Raised when Gemini fails to produce valid structured output."""
+    """Raised when Gemini fails to produce valid output."""
 
 
 class ResumeParser:
@@ -51,28 +64,45 @@ class ResumeParser:
         self._client = genai.Client(api_key=api_key)
         self._model = model
 
-    @retry(
-        retry=retry_if_exception_type(
-            (
-                ResumeParsingError,
-                Exception,
+    def extract_text_from_image(self, image_bytes: bytes) -> str:
+        """
+        Extract readable text from a rendered PDF page using Gemini Vision.
+        """
+        try:
+            response = self._client.models.generate_content(
+                model=self._model,
+                contents=[
+                    _OCR_PROMPT,
+                    types.Part.from_bytes(
+                        data=image_bytes,
+                        mime_type="image/png",
+                    ),
+                ],
             )
-        ),
-        wait=wait_exponential(
-            multiplier=1,
-            min=1,
-            max=8,
-        ),
+
+            if not response.text:
+                raise ResumeParsingError(
+                    "Gemini Vision returned empty OCR output."
+                )
+
+            return response.text.strip()
+
+        except Exception as exc:
+            logger.exception("Gemini Vision OCR failed.")
+            raise ResumeParsingError(
+                f"Could not extract text from scanned PDF page: {exc}"
+            ) from exc
+
+    @retry(
+        retry=retry_if_exception_type((ResumeParsingError, Exception)),
+        wait=wait_exponential(multiplier=1, min=1, max=8),
         stop=stop_after_attempt(3),
         reraise=True,
     )
     def parse(self, raw_text: str) -> ParsedResumeData:
-        """
-        Parse resume text into ParsedResumeData using Gemini.
-        """
+        """Parse resume text into validated structured data."""
 
         truncated_text = _truncate_for_context(raw_text)
-
         schema = ParsedResumeData.model_json_schema()
 
         prompt = f"""
@@ -100,27 +130,16 @@ Resume Text:
 
             json_text = response.text.strip()
 
-            # Remove markdown fences if Gemini returns them
             if json_text.startswith("```json"):
-                json_text = json_text.replace(
-                    "```json",
-                    "",
-                    1,
-                )
+                json_text = json_text.replace("```json", "", 1)
 
             if json_text.startswith("```"):
-                json_text = json_text.replace(
-                    "```",
-                    "",
-                    1,
-                )
+                json_text = json_text.replace("```", "", 1)
 
             if json_text.endswith("```"):
                 json_text = json_text[:-3]
 
-            json_text = json_text.strip()
-
-            data = json.loads(json_text)
+            data = json.loads(json_text.strip())
 
             return ParsedResumeData.model_validate(data)
 
@@ -129,22 +148,6 @@ Resume Text:
                 "Gemini output failed schema validation: %s",
                 exc,
             )
-
-            print(
-                "\n========== GEMINI VALIDATION ERROR =========="
-            )
-            print(
-                "Error type:",
-                type(exc).__name__,
-            )
-            print(
-                "Error message:",
-                str(exc),
-            )
-            print(
-                "=============================================\n"
-            )
-
             raise ResumeParsingError(
                 f"Schema validation failed: {exc}"
             ) from exc
@@ -154,46 +157,15 @@ Resume Text:
                 "Gemini returned invalid JSON: %s",
                 exc,
             )
-
-            print(
-                "\n========== GEMINI JSON ERROR =========="
-            )
-            print(
-                "Error type:",
-                type(exc).__name__,
-            )
-            print(
-                "Error message:",
-                str(exc),
-            )
-            print(
-                "=======================================\n"
-            )
-
             raise ResumeParsingError(
                 f"Invalid JSON returned by Gemini: {exc}"
             ) from exc
 
-        except Exception as exc:
-            print(
-                "\n========== GEMINI ERROR =========="
-            )
-            print(
-                "Error type:",
-                type(exc).__name__,
-            )
-            print(
-                "Error message:",
-                str(exc),
-            )
-            print(
-                "==================================\n"
-            )
+        except ResumeParsingError:
+            raise
 
-            logger.exception(
-                "Resume parsing failed"
-            )
-
+        except Exception:
+            logger.exception("Resume parsing failed.")
             raise
 
 
@@ -201,9 +173,7 @@ def _truncate_for_context(
     text: str,
     max_chars: int = 15000,
 ) -> str:
-    """
-    Prevent extremely large resumes from exceeding token limits.
-    """
+    """Prevent extremely large resumes from exceeding token limits."""
 
     if len(text) <= max_chars:
         return text
@@ -221,19 +191,15 @@ _parser_singleton: ResumeParser | None = None
 
 
 def get_resume_parser() -> ResumeParser:
-    """
-    FastAPI dependency accessor.
-    """
+    """FastAPI dependency accessor."""
 
     global _parser_singleton
 
     if _parser_singleton is None:
         settings = get_settings()
-
         _parser_singleton = ResumeParser(
             api_key=settings.GEMINI_API_KEY,
             model=settings.LLM_MODEL,
         )
 
     return _parser_singleton
-
