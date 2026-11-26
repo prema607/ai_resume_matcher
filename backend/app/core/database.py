@@ -74,6 +74,9 @@ async def _ensure_indexes() -> None:
 
     await resumes.create_index("email")
     await resumes.create_index("created_at")
+    await resumes.create_index("file_hash", unique=True, sparse=True)
+
+
     await jobs.create_index("created_at")
 
     logger.info("Standard MongoDB indexes ensured.")

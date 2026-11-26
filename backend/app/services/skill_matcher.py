@@ -5,449 +5,326 @@ import re
 from typing import Any, Dict, List, Set
 
 
-# ---------------------------------------------------------------------------
-# Common variations of the same skill.
-# ---------------------------------------------------------------------------
+# ============================================================
+# 1. SKILL ALIASES
+# ============================================================
+
 SKILL_ALIASES = {
-    # Databases
-    "mongo db": "mongodb",
-    "mongo-db": "mongodb",
-    "mongo database": "mongodb",
-    "mongodb database": "mongodb",
-
-    # JavaScript / frontend
-    "node js": "nodejs",
-    "node.js": "nodejs",
-    "node-js": "nodejs",
-
-    "react js": "react",
-    "react.js": "react",
-    "react-js": "react",
-
-    "vue js": "vue",
-    "vue.js": "vue",
-
-    "next js": "nextjs",
-    "next.js": "nextjs",
-
-    "express js": "express",
-    "express.js": "express",
-
-    # Java / backend
-    "spring boot": "springboot",
-    "spring-boot": "springboot",
-
-    # Microsoft
-    "c sharp": "c#",
-    "c-sharp": "c#",
-
-    "dotnet": ".net",
-    "dot net": ".net",
-
-    "ms sql": "sql server",
-    "mssql": "sql server",
-
-    # PostgreSQL
-    "postgres": "postgresql",
-    "postgre sql": "postgresql",
-
-    # AI / ML
-    "machine learning": "machine learning",
-    "deep learning": "deep learning",
-
-    # Programming languages
     "python 3": "python",
     "python3": "python",
-
     "java programming": "java",
-
-    "javascript": "javascript",
+    "c sharp": "c#",
+    "c-sharp": "c#",
     "js": "javascript",
-
-    "typescript": "typescript",
-    "ts": "typescript",
-
-    # Web technologies
+    "node js": "nodejs",
+    "node.js": "nodejs",
+    "react js": "react",
+    "react.js": "react",
+    "mongo db": "mongodb",
+    "mongo database": "mongodb",
+    "postgres": "postgresql",
+    "postgre sql": "postgresql",
+    "ms sql": "sql server",
+    "mssql": "sql server",
+    "ms excel": "excel",
+    "microsoft excel": "excel",
+    "excel spreadsheet": "excel",
     "html5": "html",
-    "html 5": "html",
-
     "css3": "css",
-    "css 3": "css",
-
-    # APIs
     "rest api": "rest",
     "rest apis": "rest",
     "restful api": "rest",
     "restful apis": "rest",
+    "dotnet": ".net",
+    "dot net": ".net",
+
+    # Accounting
+    "gaap": "accounting principles",
+    "generally accepted accounting principles": "accounting principles",
+    "bookkeeper": "bookkeeping",
+    "book keepers": "bookkeeping",
+    "bank reconciliations": "bank reconciliation",
+    "bank reconciliation statement": "bank reconciliation",
+    "financial statements": "financial reporting",
+    "financial statement preparation": "financial reporting",
+    "financial reports": "financial reporting",
+    "accounts receivable": "accounts receivable",
+    "account receivable": "accounts receivable",
+    "accounts payable": "accounts payable",
+    "account payable": "accounts payable",
+    "tally erp": "tally",
+    "tally erp 9": "tally",
+    "tally prime": "tally",
+    "quickbooks pro": "quickbooks",
+    "quick books": "quickbooks",
+    "sap fi": "sap",
+    "microsoft office excel": "excel",
 }
 
 
-# ---------------------------------------------------------------------------
-# Closely related skills.
-#
-# These are intentionally limited. They prevent obvious naming differences
-# from being treated as completely unrelated skills.
-# ---------------------------------------------------------------------------
+# ============================================================
+# 2. RELATED SKILLS
+# ============================================================
+
 RELATED_SKILLS = {
-    "javascript": {"javascript", "typescript"},
-    "typescript": {"typescript", "javascript"},
-
-    "html": {"html"},
-    "css": {"css"},
-
-    "mongodb": {"mongodb"},
-
-    "sql": {
-        "sql",
-        "sql server",
-        "mysql",
-        "postgresql",
+    "accounting principles": {
+        "accounting",
+        "financial accounting",
+        "gaap",
     },
-
-    "python": {"python"},
-    "java": {"java"},
-
-    "react": {"react", "nextjs"},
-    "nextjs": {"nextjs", "react"},
-
-    "machine learning": {
-        "machine learning",
-        "deep learning",
+    "accounting software": {
+        "quickbooks",
+        "sap",
+        "tally",
+        "busy accounting",
     },
-
-    "deep learning": {
-        "deep learning",
-        "machine learning",
+    "tally or accounting software": {
+        "tally",
+        "quickbooks",
+        "sap",
+        "busy accounting",
+    },
+    "bookkeeping": {
+        "bookkeeper",
+    },
+    "financial reporting": {
+        "financial statements",
+        "financial reports",
+    },
+    "bank reconciliation": {
+        "account reconciliation",
+        "account reconciliation expert",
+    },
+    "ms excel": {
+        "excel",
+    },
+    "microsoft excel": {
+        "excel",
     },
 }
 
 
-# ---------------------------------------------------------------------------
-# Skills we explicitly recognize inside resume text.
-#
-# This allows the matcher to find a skill when it appears in an experience
-# description, project description, summary, etc., even if the LLM did not
-# place that skill in the main "skills" array.
-# ---------------------------------------------------------------------------
+# ============================================================
+# 3. KNOWN SKILLS
+# ============================================================
+
 KNOWN_SKILLS = {
-    "python",
-    "java",
-    "c",
-    "c++",
-    "c#",
-    "javascript",
-    "typescript",
-    "html",
-    "css",
-    "react",
-    "nextjs",
-    "vue",
-    "nodejs",
-    "express",
-    "flask",
-    "django",
-    "springboot",
-    ".net",
-    "mongodb",
-    "sql",
-    "sql server",
-    "mysql",
-    "postgresql",
-    "machine learning",
-    "deep learning",
-    "docker",
-    "kubernetes",
-    "git",
-    "github",
-    "rest",
-    "fastapi",
-    "angular",
-    "php",
+    "python", "java", "javascript", "typescript",
+    "c", "c++", "c#", "html", "css",
+    "react", "angular", "nodejs", "django",
+    "flask", "fastapi", "sql", "mysql",
+    "mongodb", "postgresql", "oracle",
+    "machine learning", "deep learning",
+    "data analysis", "excel", "power bi",
+    "tableau", "artificial intelligence",
+    "communication", "teamwork", "leadership",
+    "time management", "problem solving",
+    "decision making", "project management",
+
+    # Accounting
+    "accounting", "accounting principles",
+    "financial accounting", "cost accounting",
+    "management accounting", "bookkeeping",
+    "bookkeeper", "tally", "gst", "taxation",
+    "income tax", "accounts payable",
+    "accounts receivable", "bank reconciliation",
+    "account reconciliation", "financial reporting",
+    "financial statements", "financial analysis",
+    "balance sheet", "income statement",
+    "cash flow statement", "auditing",
+    "payroll", "invoice processing",
+    "accounts management", "sap", "quickbooks",
+    "busy accounting", "accounting software",
+    "budgeting", "tax preparation",
+    "gaap", "ms excel",
+
+    # Other domains
+    "agriculture", "agronomy", "soil science",
+    "irrigation", "horticulture", "autocad",
+    "revit", "sketchup", "graphic design",
+    "photoshop", "illustrator", "photography",
+    "video editing", "automobile engineering",
+    "automotive engineering", "solidworks",
+    "catia", "ansys", "aviation",
+    "aircraft maintenance", "banking",
+    "financial services", "risk management",
+    "credit analysis", "loan processing",
+    "kyc", "aml", "customer service",
+    "blockchain", "ethereum", "solidity",
+    "smart contracts", "web3",
 }
 
+
+# ============================================================
+# 4. NORMALIZATION
+# ============================================================
 
 def normalize_skill(skill: str) -> str:
-    """
-    Normalize a skill so common naming variations match.
-
-    Examples:
-        Mongo DB     -> mongodb
-        React.js     -> react
-        Node JS      -> nodejs
-        Python 3     -> python
-        HTML5        -> html
-    """
-
     skill = str(skill).lower().strip()
-
-    # Normalize common separators.
     skill = skill.replace("_", " ")
     skill = re.sub(r"\s+", " ", skill)
-
-    # Remove surrounding punctuation while preserving
-    # meaningful characters such as # and +.
-    skill = skill.strip(".,;:()[]{}")
-
-    # Apply aliases.
-    if skill in SKILL_ALIASES:
-        return SKILL_ALIASES[skill]
-
-    return skill
+    skill = skill.strip(" ,;:()[]{}")
+    return SKILL_ALIASES.get(skill, skill)
 
 
 def _normalize_skill_set(skills: List[str]) -> Set[str]:
-    """
-    Convert a list of skills into a normalized set.
-    Empty values are ignored.
-    """
-
-    normalized: Set[str] = set()
+    result = set()
 
     for skill in skills:
-        if skill is None:
-            continue
+        if isinstance(skill, str):
+            value = normalize_skill(skill)
+            if value:
+                result.add(value)
 
-        value = normalize_skill(skill)
+    return result
 
-        if value:
-            normalized.add(value)
 
-    return normalized
-
+# ============================================================
+# 5. EXTRACT SKILLS FROM TEXT
+# ============================================================
 
 def _extract_skills_from_text(text: str) -> Set[str]:
-    """
-    Find known technical skills mentioned inside free-form resume text.
-
-    This is deliberately limited to KNOWN_SKILLS so ordinary words such as
-    "communication" or "leadership" are not accidentally treated as
-    technical skills.
-    """
-
     if not text:
         return set()
 
     normalized_text = str(text).lower()
-
-    # Normalize common separators.
     normalized_text = normalized_text.replace("_", " ")
     normalized_text = re.sub(r"\s+", " ", normalized_text)
 
-    found: Set[str] = set()
+    found = set()
+    terms = KNOWN_SKILLS | set(SKILL_ALIASES.keys())
 
-    # Check longer/multi-word skills first.
-    for skill in sorted(KNOWN_SKILLS, key=len, reverse=True):
-        normalized_skill = normalize_skill(skill)
+    for term in sorted(terms, key=len, reverse=True):
+        canonical = normalize_skill(term)
+        pattern = re.escape(term.lower())
 
-        # Escape the skill so characters such as +, # and . are handled
-        # safely inside the regular expression.
-        pattern = re.escape(normalized_skill)
+        if term.lower() == "c":
+            regex = r"(?<!\w)c(?![\w+#])"
+        else:
+            regex = rf"(?<!\w){pattern}(?!\w)"
 
-        # Word boundaries prevent partial matches.
-        #
-        # Example:
-        # "java" should not match "javascript".
-        if re.search(rf"(?<!\w){pattern}(?!\w)", normalized_text):
-            found.add(normalized_skill)
+        if re.search(regex, normalized_text):
+            found.add(canonical)
 
     return found
 
 
-def _collect_resume_skills(parsed_resume: Any) -> Set[str]:
-    """
-    Collect skills from the complete parsed resume structure.
+# ============================================================
+# 6. COLLECT RESUME SKILLS
+# ============================================================
 
-    Sources:
-        1. Explicit skills array
-        2. Experience descriptions
-        3. Project descriptions
-        4. Resume summary
-        5. Other text fields where appropriate
+def _collect_resume_skills(
+    parsed_resume: Any,
+    raw_text: str = "",
+) -> Set[str]:
 
-    This makes matching more robust when the parser mentions a technology
-    in experience/project text but forgets to include it in the skills list.
-    """
-
-    collected: Set[str] = set()
+    collected = set()
 
     if not isinstance(parsed_resume, dict):
-        return collected
+        parsed_resume = {}
 
-    # ---------------------------------------------------------------
-    # 1. Explicit skills array
-    # ---------------------------------------------------------------
+    # Explicit skills
     skills = parsed_resume.get("skills", [])
 
     if isinstance(skills, list):
-        collected.update(
-            _normalize_skill_set(skills)
-        )
+        for skill in skills:
+            if isinstance(skill, str):
+                collected.add(normalize_skill(skill))
+                collected.update(_extract_skills_from_text(skill))
 
-    # ---------------------------------------------------------------
-    # 2. Summary
-    # ---------------------------------------------------------------
-    summary = parsed_resume.get("summary")
+    # Summary
+    summary = parsed_resume.get("summary", "")
 
     if isinstance(summary, str):
-        collected.update(
-            _extract_skills_from_text(summary)
-        )
+        collected.update(_extract_skills_from_text(summary))
 
-    # ---------------------------------------------------------------
-    # 3. Experience
-    # ---------------------------------------------------------------
+    # Experience
     experience = parsed_resume.get("experience", [])
 
     if isinstance(experience, list):
         for item in experience:
-            if not isinstance(item, dict):
-                continue
-
-            for key in (
-                "role",
-                "description",
-                "company",
-            ):
-                value = item.get(key)
-
-                if isinstance(value, str):
-                    collected.update(
-                        _extract_skills_from_text(value)
-                    )
-
-    # ---------------------------------------------------------------
-    # 4. Projects
-    # ---------------------------------------------------------------
-    projects = parsed_resume.get("projects", [])
-
-    if isinstance(projects, list):
-        for item in projects:
             if isinstance(item, dict):
-                for key in (
-                    "name",
-                    "title",
-                    "description",
-                    "technologies",
-                    "tech_stack",
-                ):
+                for key in ("role", "description", "company"):
                     value = item.get(key)
 
                     if isinstance(value, str):
-                        collected.update(
-                            _extract_skills_from_text(value)
-                        )
+                        collected.update(_extract_skills_from_text(value))
 
-                    elif isinstance(value, list):
-                        for entry in value:
-                            if isinstance(entry, str):
-                                collected.update(
-                                    _normalize_skill_set([entry])
-                                )
+    # Projects, certifications and achievements
+    for section in ("projects", "certifications", "achievements"):
+        items = parsed_resume.get(section, [])
 
-    # ---------------------------------------------------------------
-    # 5. Other common structured sections
-    # ---------------------------------------------------------------
-    for section_name in (
-        "certifications",
-        "achievements",
-    ):
-        section = parsed_resume.get(section_name, [])
-
-        if isinstance(section, list):
-            for item in section:
+        if isinstance(items, list):
+            for item in items:
                 if isinstance(item, str):
-                    collected.update(
-                        _extract_skills_from_text(item)
-                    )
-
+                    collected.update(_extract_skills_from_text(item))
                 elif isinstance(item, dict):
                     for value in item.values():
                         if isinstance(value, str):
-                            collected.update(
-                                _extract_skills_from_text(value)
-                            )
+                            collected.update(_extract_skills_from_text(value))
+
+    # Original resume text
+    if raw_text:
+        collected.update(_extract_skills_from_text(raw_text))
 
     return collected
 
+
+# ============================================================
+# 7. SKILL MATCHING
+# ============================================================
 
 def _skills_match(
     required_skill: str,
     resume_skills: Set[str],
 ) -> bool:
-    """
-    Determine whether a required skill is present in the resume.
-
-    Exact normalized matching is preferred.
-
-    A small set of explicitly defined related-skill relationships
-    is also supported.
-    """
 
     required_skill = normalize_skill(required_skill)
 
-    # Exact match.
     if required_skill in resume_skills:
         return True
 
-    # Related skills.
-    related = RELATED_SKILLS.get(
-        required_skill,
-        set(),
-    )
+    related = RELATED_SKILLS.get(required_skill, set())
 
     if related.intersection(resume_skills):
         return True
 
+    # Combined requirement:
+    # Both AP and AR must be present for a full match.
+    if required_skill in (
+        "accounts payable and receivable",
+        "accounts payable/receivable",
+        "accounts payable & receivable",
+    ):
+        return (
+            "accounts payable" in resume_skills
+            and "accounts receivable" in resume_skills
+        )
+
     return False
 
+
+# ============================================================
+# 8. CALCULATE SKILL MATCH SCORE
+# ============================================================
 
 def calculate_skill_match(
     required_skills: List[str],
     resume_skills: List[str] | Dict[str, Any],
+    raw_text: str = "",
 ) -> Dict:
-    """
-    Calculate explicit required-skill coverage.
 
-    resume_skills can be either:
+    required = _normalize_skill_set(required_skills)
 
-        1. A simple list of skills
-        2. The complete parsed resume dictionary
-
-    Score:
-        matched required skills / total required skills
-
-    Example:
-
-        Required:
-            Python, Flask, MongoDB, Docker
-
-        Resume:
-            Python, Flask, Mongo DB
-
-        Result:
-            matched = 3
-            missing = 1
-            score = 3 / 4 = 0.75
-
-    Semantic similarity is NOT used here.
-    """
-
-    required = _normalize_skill_set(
-        required_skills
-    )
-
-    # Support the complete parsed resume object.
     if isinstance(resume_skills, dict):
         resume = _collect_resume_skills(
-            resume_skills
+            resume_skills,
+            raw_text,
         )
     else:
-        resume = _normalize_skill_set(
-            resume_skills
-        )
+        resume = _normalize_skill_set(resume_skills)
+        resume.update(_extract_skills_from_text(raw_text))
 
-    # No required skills means there is no meaningful
-    # explicit skill score.
     if not required:
         return {
             "skill_match_score": 0.0,
@@ -455,26 +332,19 @@ def calculate_skill_match(
             "missing_skills": [],
         }
 
-    matched: Set[str] = set()
-    missing: Set[str] = set()
+    matched = set()
+    missing = set()
 
-    for required_skill in required:
-        if _skills_match(
-            required_skill,
-            resume,
-        ):
-            matched.add(required_skill)
+    for skill in required:
+        if _skills_match(skill, resume):
+            matched.add(skill)
         else:
-            missing.add(required_skill)
+            missing.add(skill)
 
     score = len(matched) / len(required)
 
     return {
-        "skill_match_score": round(
-            score,
-            4,
-        ),
+        "skill_match_score": round(score, 4),
         "matched_skills": sorted(matched),
         "missing_skills": sorted(missing),
     }
-

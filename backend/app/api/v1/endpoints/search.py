@@ -210,6 +210,12 @@ async def _run_search(
             num_candidates=num_candidates,
             min_score=min_score,
         )
+        logger.info("VECTOR SEARCH CANDIDATES: %d", len(raw_results))
+
+        logger.info(
+    "ATLAS SCORES: %s",
+    [round(float(doc.get("score", 0)), 4) for doc in raw_results[:10]]
+)
 
     except OperationFailure as exc:
         logger.error(
@@ -267,8 +273,9 @@ async def _run_search(
 
         skill_data = calculate_skill_match(
             required_skills=required_skills,
-            resume_skills=parsed_json,
-        )
+             resume_skills=parsed_json,
+            raw_text=doc.get("raw_text", ""),
+)
 
         skill_match_score = float(
             skill_data["skill_match_score"]

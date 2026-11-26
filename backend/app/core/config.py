@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     # --- Storage ---------------------------------------------------------------
     STORAGE_DIR: str = "storage_vaults"
     MAX_UPLOAD_SIZE_MB: int = 10
+    BULK_IMPORT_ROOT: str = r"D:\resumes\Resumes PDF"
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
